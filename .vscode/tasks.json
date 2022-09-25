@@ -1,0 +1,140 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "serve",
+			"path": "frontend/",
+			"problemMatcher": [],
+			"label": "npm: serve - frontend",
+			"detail": "vue-cli-service serve"
+		},
+		{
+			"type": "npm",
+			"script": "build",
+			"path": "frontend/",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: build - frontend",
+			"detail": "vue-cli-service build --dest ../dist"
+		},
+		{
+			"type": "docker-compose",
+			"label": "ConcourseCIの起動(docker-compose)",
+			"detail": "初回失敗した場合、もう一度やると動く",
+			"dockerCompose": {
+				"up": {
+					"detached": true,
+					"build": true
+				},
+				"files": [
+					"${workspaceFolder}/.concourseci/docker-compose.yml"
+				]
+			}
+		},
+		{
+			"type": "docker-compose",
+			"label": "ConcourseCIの終了(docker-compose)",
+			"detail": "",
+			"dockerCompose": {
+				"down": {},
+				"files": [
+					"${workspaceFolder}/.concourseci/docker-compose.yml"
+				]
+			}
+		},
+		{
+			"type": "shell",
+			"label": "ConcourseCIにパイプラインを設定する",
+			"detail": "セキュアな情報を含む。設定ファイルを更新した場合に実行する。",
+			"command": [
+				"fly -t test set-pipeline -p buildpush -c .concourseci/buildpush.yml -l .concourseci/credientials.yml"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "ConcourseCIのポーズを解除する",
+			"detail": "初回パイプライン反映後、ポーズになるので、解除する",
+			"command": [
+				"fly -t test unpause-pipeline -p buildpush"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "ConcourseCIのトリガージョブの実行",
+			"detail": "git pushせずに確認する",
+			"command": [
+				"fly -t test trigger-job --job buildpush/build-and-push --watch"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "yfdb: Postgresをローカルで起動する(Swarm)",
+			"detail": "",
+			"command": [
+				"docker stack deploy --compose-file .postgres/docker-compose.yml yfdb"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "yfdb: Postgresを終了する(Swarm)",
+			"detail": "",
+			"command": [
+				"docker stack rm yfdb"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "yfapp: アプリをローカルで起動する(Swarm)",
+			"detail": "",
+			"command": [
+				"docker stack deploy --compose-file docker-compose.yml yfapp"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "yfapp: アプリを終了する(Swarm)",
+			"detail": "",
+			"command": [
+				"docker stack rm yfapp"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "yfapp: アプリをタグ付けてビルド(ローカルテスト用)",
+			"group": "build",
+			"command": [
+				"docker build . -t yanagi55/yfapp:latest"
+			],
+			"problemMatcher": []
+		},
+		{
+			"type": "docker-compose",
+			"label": "DNS Masq 起動",
+			"detail": "",
+			"dockerCompose": {
+				"up": {
+					"detached": true,
+					"build": true
+				},
+				"files": [
+					"${workspaceFolder}/.dns/docker-compose.yml"
+				]
+			}
+		},
+		{
+			"type": "docker-compose",
+			"label": "Registry 起動",
+			"detail": "",
+			"dockerCompose": {
+				"up": {
+					"detached": true,
+					"build": true
+				},
+				"files": [
+					"${workspaceFolder}/.registry/docker-compose.yml"
+				]
+			}
+		}
+	]
+}

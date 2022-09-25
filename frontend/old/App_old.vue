@@ -1,0 +1,161 @@
+<template>
+  <v-app>
+    <!-- 上：ヘッダー -->
+    <v-app-bar app flat>
+      <!-- アイコン表示のレスポンシブが、途切れてる。とりあえず常に表示 -->
+      <v-app-bar-nav-icon @click="drawer = true"></v-app-bar-nav-icon>
+      <v-toolbar-title>CoverArtReplacer</v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-btn icon>
+        <v-icon>mdi-magnify</v-icon>
+      </v-btn>
+      <v-btn icon>
+        <v-icon>mdi-heart</v-icon>
+      </v-btn>
+    </v-app-bar>
+
+    <!-- 左：ナビゲーション -->
+    <v-navigation-drawer v-model="drawer" app>
+      <v-list>
+        <v-list-item>
+          <v-list-item-content>
+            <v-list-item-title class="text-h6"> yf.apps </v-list-item-title>
+            <v-list-item-subtitle> my own test </v-list-item-subtitle>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+
+      <v-divider></v-divider>
+
+      <v-list>
+        <v-list-item-group v-model="group">
+          <v-list-item to="/">
+            <v-list-item-icon>
+              <v-icon>mdi-home</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Home</v-list-item-title>
+              <!-- <v-list-item-subtitle></v-list-item-subtitle> -->
+            </v-list-item-content>
+          </v-list-item>
+
+          <v-list-item to="/cover-art-replacer">
+            <v-list-item-icon>
+              <v-icon>mdi-music</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>CoverArtReplacer</v-list-item-title>
+              <v-list-item-subtitle
+                >MP3に画像を埋め込む</v-list-item-subtitle
+              ></v-list-item-content
+            >
+          </v-list-item>
+
+          <v-list-item to="/photo-uploader">
+            <v-list-item-icon>
+              <v-icon>mdi-image</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>PhotoUploader</v-list-item-title>
+              <v-list-item-subtitle
+                >画像を保管する</v-list-item-subtitle
+              ></v-list-item-content
+            >
+          </v-list-item>
+
+          <v-list-item to="/account">
+            <v-list-item-icon>
+              <v-icon>mdi-account</v-icon>
+            </v-list-item-icon>
+
+            <v-list-item-content>
+              <v-list-item-title>Account</v-list-item-title>
+              <v-list-item-subtitle>Hello World</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+
+          <v-list-item to="/about">
+            <v-list-item-icon>
+              <v-icon>mdi-information</v-icon>
+            </v-list-item-icon>
+
+            <v-list-item-content>
+              <v-list-item-title>About</v-list-item-title>
+              <v-list-item-subtitle>通信テスト用</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-item-group>
+      </v-list>
+    </v-navigation-drawer>
+
+    <v-main>
+      <v-container fluid>
+        <!-- <CommonButton btn_label="LOAD" @change="read_file" />
+        <p>input: {{ file_name_A }}</p>
+        <ImageArea :src="img_src" /> -->
+
+        <!-- !!!!! S3 test -->
+        <!-- <img
+          src="https://yanagi-app-media.s3.amazonaws.com/_ceemh-1434350821815115784-0.jpg"
+        /> -->
+
+        <!-- ★ここはrouter-view側で内容を書いている。ルートはHome.vue -->
+        <router-view></router-view>
+      </v-container>
+    </v-main>
+    <!-- <v-btn @click="SendData"><p>a</p></v-btn> -->
+    <v-footer app>
+      <p>v-footer</p>
+    </v-footer>
+  </v-app>
+</template>
+
+<script lang="coffee" type="text/coffeescript">
+import CommonButton from './components/CommonButton.vue'
+import HelloWorld from './components/HelloWorld.vue'
+import ImageArea from './components/ImageArea.vue'
+import axios from 'axios'
+export default
+    # name: 'App'
+    components: { CommonButton, HelloWorld, ImageArea }
+    data:() ->
+        InputText: ''
+        TextLength: null
+        items: []
+        file_name_A : 'No files selected.'
+        img_src : ''
+
+        drawer: null
+        group: null
+    methods:
+        read_file:(event) ->
+            this.file_name_A = event.target.files[0].name
+            this.img_src = URL.createObjectURL(event.target.files[0])
+        SendData:() ->
+            this.file_name_A = 'test'
+            data = text: this.InputText
+            axios
+            .post('/api/post', data)
+            .then((response) =>
+                this.items.push(response.data)
+                )
+            .catch((err) =>
+                alert('cant connect api server')
+                err = null
+                )
+</script>
+
+<style>
+.greeting {
+  color: gray;
+  font-size: 30px;
+}
+#app {
+  /* font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale; */
+  /* text-align: center; */
+  color: #2c3e50;
+  /* margin-top: 60px; */
+}
+</style>

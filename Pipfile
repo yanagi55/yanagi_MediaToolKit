@@ -1,0 +1,39 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+gunicorn = "*"
+eyed3 = "*"
+fastapi = "*"
+uvicorn = "*"
+aiofiles = "*"
+python-multipart = "*"
+boto3 = "*"
+sqlalchemy = "*"
+aioredis = "*"
+redis = "*"
+passlib = "*"
+bcrypt = "*"
+pyjwt = "*"
+python-jose = "*"
+pysqlite3 = "*"
+psycopg2 = "==2.9.1"
+pillow = "*"
+
+[dev-packages]
+python-ffmpeg-video-streaming = "*"
+requests = "*"
+tqdm = "*"
+requests-toolbelt = "*"
+wxpython = "*"
+colorama = "*"
+termcolor = "*"
+ffmpeg-python = "*"
+
+[requires]
+python_version = "3.9"
+
+[scripts]
+start = "python backend/main.py"

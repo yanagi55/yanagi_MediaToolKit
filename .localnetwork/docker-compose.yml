@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  localnetwork_inspecter:
+    # restart: always
+    image: debian:bullseye-slim
+    tty: true
+    networks:
+      yfbuild:
+        ipv4_address: 172.20.0.16
+networks:
+  yfbuild:
+    external: true

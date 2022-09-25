@@ -1,0 +1,215 @@
+##### RESOURCE #####
+resources:
+- name: yf-github
+  type: git
+  icon: github
+  source:
+    uri: git@github.com:yanagi55/cover-art-replacer-spa.git # privateはhttpsでは動かない
+    branch: master
+    private_key: ((yf-private-key))
+
+- name: yf-app-image
+  type: registry-image
+  icon: docker
+  source:
+    repository: ((image-repo-name))/((image-name))
+    tag: ((image-tag))
+    username: ((registry-username))
+    password: ((registry-password))
+
+- name: python-image
+  type: registry-image
+  icon: language-python
+  source:
+    repository:  python
+    tag: 3.9-slim
+
+- name: nodejs-image
+  type: registry-image
+  icon: nodejs
+  source:
+    repository: node
+    tag: 14-bullseye-slim
+
+# Local registry #
+- name: prebuilt-python
+  type: registry-image
+  icon: language-python
+  source:
+    repository:  local.yf-toolkit-s.tk:5000/buildbase-py
+    tag: latest
+- name: prebuilt-nodejs
+  type: registry-image
+  icon: nodejs
+  source:
+    repository:  local.yf-toolkit-s.tk:5000/buildbase-node
+    tag: latest
+
+- name: yf-staging-server-ssh
+  type: ssh
+  icon: server
+  source:
+    host: ((yf-staging-uri))
+    user: ((yf-staging-username))
+    private_key: ((yf-private-key))
+resource_types:
+- name: ssh
+  type: docker-image
+  source:
+    repository: quay.io/henry40408/concourse-ssh-resource
+
+
+jobs:
+### JOB - プレビルド ###
+- name: prebuild
+  plan:
+  - in_parallel:
+    - get: yf-github
+      trigger: false
+    - get: python-image
+    - get: nodejs-image
+
+  - in_parallel:
+    - task: py-base
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: concourse/oci-build-task
+        inputs:
+        - name: yf-github
+        outputs:
+        - name: image
+        caches:
+        - path: .cache_test
+        params:
+          DOCKERFILE: yf-github/Dockerfile_Base_Py
+          CONTEXT: yf-github
+          # UNPACK_ROOTFS: true
+        run:
+          path: build
+          
+      on_success:
+        put: prebuilt-python
+        get_params:
+          skip_download: true
+        params:
+          image: image/image.tar
+    
+    - task: node-base
+      privileged: true
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: concourse/oci-build-task
+        inputs:
+        - name: yf-github
+        outputs:
+        - name: image
+        params:
+          DOCKERFILE: yf-github/Dockerfile_Base_Node
+          CONTEXT: yf-github
+        run:
+          path: build
+      on_success:
+        put: prebuilt-nodejs
+        get_params:
+          skip_download: true
+        params:
+          image: image/image.tar
+
+### JOB - メインビルド ###
+- name: build-and-push
+  plan:
+  - in_parallel:
+    - get: yf-github
+      trigger: true
+    - get: python-image
+    - get: prebuilt-python
+      passed: 
+        - prebuild
+    - get: prebuilt-nodejs
+      passed:
+        - prebuild
+  - task: build
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: concourse/oci-build-task
+      inputs:
+      - name: yf-github
+      outputs:
+      - name: image
+      params:
+        DOCKERFILE: yf-github/Dockerfile_FromBase
+        CONTEXT: yf-github #buildを実行するフォルダを渡す
+        # CA_CERTS: ((ca-certs))
+      run:
+        path: sh
+        args:
+        - -c
+        - |
+          build
+        # echo -e "${CA_CERTS}" >> /etc/ssl/certs/ca-certificates.crt
+        # echo "172.20.0.4 localhost" | tee -a /etc/hosts
+
+  - put: yf-app-image
+    get_params:
+      skip_download: true
+    params:
+      image: image/image.tar
+
+### JOB - デプロイ ###
+- name: deploy
+  plan:
+  - in_parallel:
+    - get: yf-github
+    - get: yf-app-image
+      passed:
+        - build-and-push
+      trigger: true
+    - put: yf-staging-server-ssh # デプロイ前にVPSの不要ファイルを削除する
+      params:
+        interpreter: /bin/sh
+        script: |
+          yes | sudo docker system prune
+          yes | sudo docker volume prune
+
+  - task: push-docker-compose.yml
+    privileged: true
+    config:
+      platform: linux
+      image_resource:
+        type: registry-image
+        source:
+          repository: concourse/oci-build-task
+      inputs:
+      - name: yf-github
+      run:
+        path: sh
+        args:
+        - -c
+        - |
+          echo '((yf-private-key))' >> keyfile
+          chmod 600 keyfile
+          scp -o StrictHostKeyChecking=no -i keyfile yf-github/docker-compose.yml yanagi@((yf-staging-uri)):~
+
+  - put: yf-staging-server-ssh
+    params:
+      interpreter: /bin/sh
+      script: |
+        echo ((registry-password)) | sudo docker login -u ((registry-username)) --password-stdin
+        sudo docker stack deploy --compose-file docker-compose.yml yfapp --with-registry-auth
+        sudo docker logout
+        echo "yf: docker logout. login credientials were removed."
+        echo "yf: manually confirmed in /root/.docker/config.json"
+        echo "yf: Just ignore this warning from docker"
+
+#         sudo docker pull ((image-repo-name))/((image-name)):((image-tag))

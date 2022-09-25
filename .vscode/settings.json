@@ -1,0 +1,8 @@
+{
+    // VSCのポップアップ抑止
+    "python.formatting.provider": "none",
+    // VSCの関数をインデントで折りたたむ
+        "[vue]": {
+        "editor.foldingStrategy": "indentation"
+    }
+}

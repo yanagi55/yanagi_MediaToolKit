@@ -1,0 +1,15 @@
+FROM node:14-bullseye-slim
+# FROM local.yf-toolkit-s.tk/node:14-bullseye-slim
+RUN apt-get update 
+RUN apt-get install python3.9 python3-pip -y
+RUN apt-get install gcc libpq-dev -y
+
+# Pythonの依存関係をインストール
+WORKDIR /app
+COPY ./requirements.txt /app/requirements.txt
+RUN pip install --upgrade -r /app/requirements.txt
+
+# Nodeの依存関係をインストール
+WORKDIR /app/frontend
+COPY ./frontend/package*.json /app/frontend
+RUN npm ci

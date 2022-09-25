@@ -1,0 +1,7 @@
+FROM node:14-bullseye-slim
+RUN apt-get update
+
+# Nodeの依存関係をインストール
+WORKDIR /app/frontend
+COPY ./frontend/package*.json /app/frontend
+RUN npm ci

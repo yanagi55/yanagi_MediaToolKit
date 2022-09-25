@@ -1,0 +1,12 @@
+upstream app {
+    server yfapp:5012;
+}
+
+server {
+    listen 80;
+    server_name external;
+
+    location / {
+        proxy_pass http://yfapp:5012;
+    }
+}

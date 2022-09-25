@@ -1,0 +1,23 @@
+version: '2'
+services:
+  dnsmasq:
+    # restart: always
+    image: 4km3/dnsmasq
+    container_name: dnsmasq
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    extra_hosts:
+      - "localregistry:172.20.0.12"
+
+      - "concourseci-db:172.20.0.2"
+      - "concourseci:172.20.0.3"
+    cap_add:
+      - NET_ADMIN
+    networks:
+      yfbuild:
+        ipv4_address: 172.20.0.11
+
+networks:
+  yfbuild:
+    external: true

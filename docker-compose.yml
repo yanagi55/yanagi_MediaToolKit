@@ -1,0 +1,64 @@
+version: '3.8'
+services:
+
+  yfapp:
+    image: yanagi55/yfapp:latest
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+    ports:
+      - target: 5012
+        published: 5012
+        protocol: tcp
+    volumes:
+      - sqlite-data:/app/yf_tmpfs
+      - storage-video:/app/storage/video
+    networks:
+      - yfnetwork
+
+  https-portal:
+    image: steveltn/https-portal:1
+    depends_on:
+      - yfapp
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        parallelism: 1
+        delay: 10s
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+      - target: 443
+        published: 443
+        protocol: tcp
+    environment:
+      DOMAINS: |
+        yf-toolkit-s.tk -> yfapp:5012
+      # STAGE: 'staging'
+      STAGE: 'production'
+      # DOMAINS: 'host.docker.internal -> yfapp:5012'
+      # STAGE: 'local'
+      CLIENT_MAX_BODY_SIZE: 50M
+    volumes:
+      - https-portal-data:/var/lib/https-portal
+    networks:
+      - yfnetwork
+
+networks:
+  yfnetwork:
+    external: true
+
+volumes:
+  sqlite-data:
+    driver: local
+  https-portal-data:
+    driver: local
+  storage-video:
+    driver: local

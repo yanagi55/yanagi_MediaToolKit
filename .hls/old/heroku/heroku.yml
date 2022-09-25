@@ -1,0 +1,6 @@
+build:
+  docker:
+    web: .hls/.heroku/Dockerfile
+run:
+  web: gunicorn -w 2 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:5012 --pythonpath .hls/heroku .hls.heroku.main:app
+  # web: gunicorn -w 2 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:5012 --pythonpath backend backend.main:app

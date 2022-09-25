@@ -1,0 +1,10 @@
+(testはタスク名)
+
+★まずConcourseCIを立ち上げる(./.concourseci)
+$ docker-compose up -d
+
+★パイプラインを設定する
+$ fly -t test set-pipeline -p buildpush -c buildpush.yml --load-vars-from credientials.yml
+
+★トリガージョブを実行してみる(テスト用)
+$ fly -t test trigger-job --job buildpush/build-and-push --watch

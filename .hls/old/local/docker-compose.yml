@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+
+  hls:
+    image: debian:bullseye-slim
+    tty: true
+    # deploy:
+    #   replicas: 1
+    #   restart_policy:
+    #     condition: on_failure
+    #   update_config:
+    #     parallelism: 1
+    #     delay: 10s
+    # resources:
+    #   limits:
+    #     cpus: '0.50'
+    #     memory: 200M
+    #   reservations:
+    #     cpus: '0.10'
+    #     memory: 10M
+    # ports:
+    #   - target: 5020
+    #     published: 5020
+    #     protocol: tcp
+    #     # mode: host
+    # network_mode: 'host'
+    # networks:
+    #   - host
+
+    # networks:
+    #   yfnetwork:
+    #     external: true

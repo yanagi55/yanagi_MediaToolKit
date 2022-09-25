@@ -1,0 +1,21 @@
+  {
+    "include": [
+      "./frontend/src/**/*"
+    ],
+    "exclude": ["node_modules", "dist"], //これを入れるとエラーにならない
+    "outDir": "./dist",
+    "compilerOptions": {
+      "module": "es2015",
+      "moduleResolution": "node",
+      "target": "es5",
+      "strict": true, // コレが無いと機能しない！
+      "sourceMap": true,
+      "outDir": "./dist", //これを入れるとエラーにならない
+      "allowJs": true,
+      "experimentalDecorators": true,
+    //   "lib": [
+    //     "DOM",
+    //     "es2020"
+    // ],
+    }
+  }

@@ -1,0 +1,66 @@
+version: '3'
+
+services:
+  concourse-db:
+    # restart: always
+    image: postgres
+    environment:
+      POSTGRES_DB: concourse
+      POSTGRES_PASSWORD: concourse_pass
+      POSTGRES_USER: concourse_user
+      PGDATA: /database
+    networks:
+      yfbuild:
+        ipv4_address: 172.20.0.2
+    volumes:
+      - concourse-db:/database
+      - concourse-db:/var/lib/postgresql/data
+
+  concourse:
+    # restart: always
+    image: concourse/concourse
+    command: quickstart
+    privileged: true
+    depends_on: [ concourse-db ]
+    ports: [ "8080:8080" ]
+    networks:
+      yfbuild:
+        ipv4_address: 172.20.0.3
+    volumes:
+      - concourse:/worker-state
+    environment:
+      CONCOURSE_POSTGRES_HOST: concourse-db
+      CONCOURSE_POSTGRES_USER: concourse_user
+      CONCOURSE_POSTGRES_PASSWORD: concourse_pass
+      CONCOURSE_POSTGRES_DATABASE: concourse
+      CONCOURSE_EXTERNAL_URL: http://localhost:8080
+      CONCOURSE_ADD_LOCAL_USER: test:test
+      CONCOURSE_MAIN_TEAM_LOCAL_USER: test
+      # instead of relying on the default "detect"
+      CONCOURSE_WORKER_BAGGAGECLAIM_DRIVER: overlay
+      CONCOURSE_CLIENT_SECRET: Y29uY291cnNlLXdlYgo=
+      CONCOURSE_TSA_CLIENT_SECRET: Y29uY291cnNlLXdvcmtlcgo=
+      CONCOURSE_X_FRAME_OPTIONS: allow
+      CONCOURSE_CONTENT_SECURITY_POLICY: "*"
+      CONCOURSE_CLUSTER_NAME: tutorial
+      CONCOURSE_WORKER_CONTAINERD_DNS_SERVER: "8.8.8.8" # /etc/resolve.conf
+      # CONCOURSE_WORKER_CONTAINERD_DNS_SERVER: "172.20.0.11,8.8.8.8" # /etc/resolve.conf
+      CONCOURSE_CONTAINERD_ALLOW_HOST_ACCESS: "true"
+      CONCOURSE_WORKER_CONTAINERD_ALLOW_HOST_ACCESS: "true"
+      CONCOURSE_WORKER_RUNTIME: "containerd"
+      # CONCOURSE_CERTS_DIR: "test"
+      # CONCOURSE_CONTAINERD_DNS_SERVER: "8.8.8.8"
+      # CONCOURSE_CONTAINERD_DNS_PROXY_ENABLE: "true"
+      # CONCOURSE_WORKER_DNS_PROXY_ENABLE: "true"
+      # extra_hosts: [ 'localregistry:172.20.0.4' ]
+      # ↑　これはConcourseCIコンテナにしか有効でなく、内部のBuildでは無効
+
+
+networks:
+  yfbuild:
+    external: true
+volumes:
+  concourse-db:
+    driver: local
+  concourse:
+    driver: local

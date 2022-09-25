@@ -1,0 +1,12 @@
+# coding: utf-8
+remote_directory "/home/yanagi/yfweb/conf.d" do
+    owner "yanagi"
+    group "yanagi"
+    source "./yfweb/conf.d"
+end
+
+# remote_file "/home/yanagi/docker-compose.yaml" do
+#     owner "yanagi"
+#     group "yanagi"
+#     source "./docker-compose.yaml"
+# end

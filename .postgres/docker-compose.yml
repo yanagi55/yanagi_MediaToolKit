@@ -1,0 +1,29 @@
+version: '3.7'
+services:
+  yfdb:
+    image: postgres:13-alpine3.14
+    # image: postgres:13-bullseye
+    environment:
+      POSTGRES_PASSWORD: postgres
+      TZ: Asia/Tokyo
+      LANG: ja_JP.UTF-8 # debianではコメントアウトしないとエラーになる
+      LANGUAGE: ja_JP:ja # 同上 たぶん言語パックが入っていないせい？
+      LC_ALL: ja_JP.UTF-8 # 同上
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - target: 5432
+        published: 9555
+        protocol: tcp
+        mode: host
+    networks:
+      - yfnetwork
+    volumes:
+      - yfpsql:/var/lib/postgresql/data
+
+networks:
+  yfnetwork:
+    external: true
+
+volumes:
+  yfpsql:
+    driver: local
